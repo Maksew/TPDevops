@@ -34,3 +34,8 @@ coverage
 
 # Vitest
 __screenshots__/
+
+# Test reports
+playwright-report/
+test-results/
+html/
