@@ -39,3 +39,6 @@ __screenshots__/
 playwright-report/
 test-results/
 html/
+
+# Local Netlify folder
+.netlify

@@ -62,5 +62,23 @@ pipeline {
         }
       }
     }
+    stage('Deploy to Netlify') {
+      agent { 
+        docker { 
+          image 'mcr.microsoft.com/playwright:v1.57.0-noble'
+        } 
+      }
+      when {
+        branch 'main'
+      }
+      environment {
+        NETLIFY_AUTH_TOKEN = credentials('NETLIFY_TOKEN')
+      }
+      steps {
+        sh 'npm install'
+        sh 'npm run build'
+        sh 'node_modules/netlify-cli/bin/run.js deploy --prod --site tpcid-chess.netlify.app'
+      }
+    }
   }
 }
