@@ -87,7 +87,7 @@ pipeline {
       }
       environment {
         CI_REGISTRY = 'ghcr.io'
-        CI_REGISTRY_USER = 'Maksew'
+        CI_REGISTRY_USER = 'maksew'
         CI_REGISTRY_IMAGE = "${CI_REGISTRY}/${CI_REGISTRY_USER}/chess"
         CI_REGISTRY_PASSWORD = credentials('CI_REGISTRY_PASSWORD')
       }
