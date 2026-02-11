@@ -4,38 +4,110 @@ import BoardSquare from './BoardSquare.vue';
 import { chessService } from '../../services/ChessService';
 
 const board = computed(() => chessService.board);
+const currentTurn = computed(() => chessService.currentTurn);
+const isCheck = computed(() => chessService.isCheck);
+const isCheckmate = computed(() => chessService.isCheckmate);
+const isStalemate = computed(() => chessService.isStalemate);
+const isDraw = computed(() => chessService.isDraw);
+const isGameOver = computed(() => chessService.isGameOver);
+
+const statusText = computed(() => {
+  if (isCheckmate.value) return `Checkmate! ${currentTurn.value === 'white' ? 'Black' : 'White'} wins!`;
+  if (isStalemate.value) return 'Stalemate! Draw.';
+  if (isDraw.value) return 'Draw!';
+  if (isCheck.value) return `${currentTurn.value === 'white' ? 'White' : 'Black'} is in check!`;
+  return `${currentTurn.value === 'white' ? 'White' : 'Black'}'s turn`;
+});
 
 const onMove = ({ from, to }) => {
-  // Delegate to service
   chessService.movePiece(from.x, from.y, to.x, to.y);
+};
+
+const resetGame = () => {
+  chessService.initializeGame();
 };
 </script>
 
 <template>
-  <div class="chess-board">
-    <div v-for="(row, y) in board" :key="y" class="board-row">
-      <BoardSquare 
-        v-for="(piece, x) in row" 
-        :key="`${x}-${y}`"
-        :x="x"
-        :y="y"
-        :is-black="(x + y) % 2 === 1"
-        :piece="piece"
-        @move="onMove"
-      />
+  <div class="chess-board-wrapper">
+    <div class="game-status" :class="{ 'status-check': isCheck, 'status-gameover': isGameOver }">
+      {{ statusText }}
+      <button v-if="isGameOver" class="reset-btn" @click="resetGame">New Game</button>
     </div>
-    
-    <!-- Coordinate Labels (Optional but premium) -->
-    <div class="coordinates coords-cols">
-      <span v-for="l in ['a','b','c','d','e','f','g','h']" :key="l">{{ l }}</span>
-    </div>
-    <div class="coordinates coords-rows">
-      <span v-for="n in ['8','7','6','5','4','3','2','1']" :key="n">{{ n }}</span>
+    <div class="chess-board">
+      <div v-for="(row, y) in board" :key="y" class="board-row">
+        <BoardSquare 
+          v-for="(piece, x) in row" 
+          :key="`${x}-${y}`"
+          :x="x"
+          :y="y"
+          :is-black="(x + y) % 2 === 1"
+          :piece="piece"
+          @move="onMove"
+        />
+      </div>
+      
+      <!-- Coordinate Labels -->
+      <div class="coordinates coords-cols">
+        <span v-for="l in ['a','b','c','d','e','f','g','h']" :key="l">{{ l }}</span>
+      </div>
+      <div class="coordinates coords-rows">
+        <span v-for="n in ['8','7','6','5','4','3','2','1']" :key="n">{{ n }}</span>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.chess-board-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.game-status {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.6rem 1.5rem;
+  border-radius: 8px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+}
+
+.status-check {
+  border-color: #f59e0b;
+  color: #fbbf24;
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.status-gameover {
+  border-color: #ef4444;
+  color: #f87171;
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.reset-btn {
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #38bdf8;
+  background: transparent;
+  color: #38bdf8;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.reset-btn:hover {
+  background-color: #38bdf8;
+  color: #0f172a;
+}
+
 .chess-board {
   display: flex;
   flex-direction: column;
@@ -69,7 +141,7 @@ const onMove = ({ from, to }) => {
   width: 100%;
   display: flex;
   justify-content: space-around;
-  padding-left: 2px; /* Slight adjustment */
+  padding-left: 2px;
 }
 
 .coords-rows {
