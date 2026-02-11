@@ -19,43 +19,61 @@ describe('ChessService', () => {
         expect(board[7][7].color).toBe('white')
     })
 
-    it('moves a piece to an empty square', () => {
-        // Move white pawn from (0, 6) to (0, 4) - simplified move logic allowed
-        const success = chessService.movePiece(0, 6, 0, 4)
+    it('allows a legal move', () => {
+        // White pawn e2 -> e4 (x=4, fromY=6, toY=4)
+        const success = chessService.movePiece(4, 6, 4, 4)
         expect(success).toBe(true)
 
-        expect(chessService.board[4][0]).not.toBeNull()
-        expect(chessService.board[4][0].type).toBe('pawn')
-        expect(chessService.board[4][0].color).toBe('white')
+        expect(chessService.board[4][4]).not.toBeNull()
+        expect(chessService.board[4][4].type).toBe('pawn')
+        expect(chessService.board[4][4].color).toBe('white')
 
         // Old position should be empty
-        expect(chessService.board[6][0]).toBeNull()
+        expect(chessService.board[6][4]).toBeNull()
     })
 
-    it('captures a piece', () => {
-        // Setup: Place a black pawn where white pawn will land
-        // We can manipulate state directly since it's reactive, but better to use moves if possible.
-        // Since movement is free, we can just move.
+    it('rejects an illegal move', () => {
+        // White pawn e2 -> e5 is illegal (3 squares forward)
+        const success = chessService.movePiece(4, 6, 4, 3)
+        expect(success).toBe(false)
 
-        // Move white pawn to (0, 4)
-        chessService.movePiece(0, 6, 0, 4)
+        // Piece should still be at original position
+        expect(chessService.board[6][4]).not.toBeNull()
+        expect(chessService.board[6][4].type).toBe('pawn')
+    })
 
-        // Move black pawn to (0, 4) - Capture
-        const success = chessService.movePiece(0, 1, 0, 4)
+    it('enforces turn order', () => {
+        expect(chessService.currentTurn).toBe('white')
+
+        // White moves
+        chessService.movePiece(4, 6, 4, 4) // e2 -> e4
+        expect(chessService.currentTurn).toBe('black')
+
+        // Black tries an illegal move (wrong color — white piece)
+        const illegal = chessService.movePiece(3, 6, 3, 4) // d2 -> d4 is white's piece
+        expect(illegal).toBe(false)
+
+        // Black makes a legal move
+        const success = chessService.movePiece(4, 1, 4, 3) // e7 -> e5
         expect(success).toBe(true)
+        expect(chessService.currentTurn).toBe('white')
+    })
 
-        const piece = chessService.board[4][0]
-        expect(piece.color).toBe('black')
+    it('handles captures correctly', () => {
+        // Setup: e2->e4, d7->d5, e4xd5 (legal capture)
+        chessService.movePiece(4, 6, 4, 4) // e2 -> e4
+        chessService.movePiece(3, 1, 3, 3) // d7 -> d5
+        const capture = chessService.movePiece(4, 4, 3, 3) // e4 x d5
+        expect(capture).toBe(true)
+
+        const piece = chessService.board[3][3]
+        expect(piece.color).toBe('white')
         expect(piece.type).toBe('pawn')
-
-        const lastMove = chessService.history[chessService.history.length - 1]
-        expect(lastMove).toContain('captures')
     })
 
     it('updates history correctly', () => {
-        chessService.movePiece(0, 6, 0, 5)
+        chessService.movePiece(4, 6, 4, 4) // e2 -> e4
         expect(chessService.history.length).toBe(1)
-        // Check format roughly: "♙ a2 -> a3"
-        expect(chessService.history[0]).toMatch(/a2 -> a3/)
+        expect(chessService.history[0]).toBe('e4')
     })
 })
